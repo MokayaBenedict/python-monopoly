@@ -1,17 +1,50 @@
 import random
 
-
 board = [
-    "GO (0)", "Mediterranean Avenue (1)", "Community Chest (2)", "Baltic Avenue (3)", "Income Tax (4)",
-    "Reading Railroad (5)", "Oriental Avenue (6)", "Chance (7)", "Vermont Avenue (8)", "Connecticut Avenue (9)",
-    "Jail (10)", "St. Charles Place (11)", "Electric Company (12)", "Virginia Avenue (13)",
-    "Pennsylvania Railroad (14)", "St. James Place (15)", "Community Chest (16)", "Tennessee Avenue (17)",
-    "New York Avenue (18)", "Free Parking (19)", "Kentucky Avenue (20)", "Chance (21)", "Indiana Avenue (22)",
-    "Illinois Avenue (23)", "B&O Railroad (24)", "Atlantic Avenue (25)", "Ventnor Avenue (26)",
-    "Water Works (27)", "Marvin Gardens (28)", "Go to Jail (29)", "Pacific Avenue (30)",
-    "North Carolina Avenue (31)", "Community Chest (32)", "Pennsylvania Avenue (33)",
-    "Short Line Railroad (34)", "Chance (35)", "Park Place (36)", "Luxury Tax (37)", "Boardwalk (38)"
+    {"square": 0, "name": "GO", "price": 0},
+    {"square": 1, "name": "Mediterranean Avenue", "price": 60},
+    {"square": 2, "name": "Community Chest", "price": 0},
+    {"square": 3, "name": "Baltic Avenue", "price": 60},
+    {"square": 4, "name": "Income Tax", "price": 0},
+    {"square": 5, "name": "Reading Railroad", "price": 200},
+    {"square": 6, "name": "Oriental Avenue", "price": 100},
+    {"square": 7, "name": "Chance", "price": 0},
+    {"square": 8, "name": "Vermont Avenue", "price": 100},
+    {"square": 9, "name": "Connecticut Avenue", "price": 120},
+    {"square": 10, "name": "Jail", "price": 0},
+    {"square": 11, "name": "St. Charles Place", "price": 140},
+    {"square": 12, "name": "Electric Company", "price": 150},
+    {"square": 13, "name": "Virginia Avenue", "price": 160},
+    {"square": 14, "name": "Pennsylvania Railroad", "price": 200},
+    {"square": 15, "name": "St. James Place", "price": 180},
+    {"square": 16, "name": "Community Chest", "price": 0},
+    {"square": 17, "name": "Tennessee Avenue", "price": 180},
+    {"square": 18, "name": "New York Avenue", "price": 200},
+    {"square": 19, "name": "Free Parking", "price": 0},
+    {"square": 20, "name": "Kentucky Avenue", "price": 220},
+    {"square": 21, "name": "Chance", "price": 0},
+    {"square": 22, "name": "Indiana Avenue", "price": 220},
+    {"square": 23, "name": "Illinois Avenue", "price": 240},
+    {"square": 24, "name": "B&O Railroad", "price": 200},
+    {"square": 25, "name": "Atlantic Avenue", "price": 260},
+    {"square": 26, "name": "Ventnor Avenue", "price": 260},
+    {"square": 27, "name": "Water Works", "price": 150},
+    {"square": 28, "name": "Marvin Gardens", "price": 280},
+    {"square": 29, "name": "Go to Jail", "price": 0},
+    {"square": 30, "name": "Go to Jail", "price": 0}
+    {"square": 31, "name": "Pacific Avenue", "price": 300},
+    {"square": 32, "name": "North Carolina Avenue", "price": 300},
+    {"square": 33, "name": "Community Chest", "price": 0},
+    {"square": 34, "name": "Pennsylvania Avenue", "price": 320},
+    {"square": 35, "name": "Short Line Railroad", "price": 200},
+    {"square": 36, "name": "Chance", "price": 0},
+    {"square": 37, "name": "Park Place", "price": 350},
+    {"square": 38, "name": "Luxury Tax", "price": 0},
+    {"square": 39, "name": "Boardwalk", "price": 400}
+    
+   
 ]
+
 
 
 # Define the player class
