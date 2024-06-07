@@ -31,21 +31,16 @@ board = [
     {"square": 27, "name": "Water Works", "price": 150},
     {"square": 28, "name": "Marvin Gardens", "price": 280},
     {"square": 29, "name": "Go to Jail", "price": 0},
-    {"square": 30, "name": "Go to Jail", "price": 0}
-    {"square": 31, "name": "Pacific Avenue", "price": 300},
-    {"square": 32, "name": "North Carolina Avenue", "price": 300},
-    {"square": 33, "name": "Community Chest", "price": 0},
-    {"square": 34, "name": "Pennsylvania Avenue", "price": 320},
-    {"square": 35, "name": "Short Line Railroad", "price": 200},
-    {"square": 36, "name": "Chance", "price": 0},
-    {"square": 37, "name": "Park Place", "price": 350},
-    {"square": 38, "name": "Luxury Tax", "price": 0},
-    {"square": 39, "name": "Boardwalk", "price": 400}
-    
-   
+    {"square": 30, "name": "Pacific Avenue", "price": 300},
+    {"square": 31, "name": "North Carolina Avenue", "price": 300},
+    {"square": 32, "name": "Community Chest", "price": 0},
+    {"square": 33, "name": "Pennsylvania Avenue", "price": 320},
+    {"square": 34, "name": "Short Line Railroad", "price": 200},
+    {"square": 35, "name": "Chance", "price": 0},
+    {"square": 36, "name": "Park Place", "price": 350},
+    {"square": 37, "name": "Luxury Tax", "price": 0},
+    {"square": 38, "name": "Boardwalk", "price": 400}
 ]
-
-
 
 # Define the player class
 class Player:
@@ -61,7 +56,19 @@ def roll_dice():
 
 def move_player(player, steps):
     player.position = (player.position + steps) % 40
-    print(f"{player.name} moved to {board[player.position]}")
+    current_square = board[player.position]
+    print(f"{player.name} moved to square {current_square['square']}: {current_square['name']} (${current_square['price']})")
+    print(f"Properties owned by {player.name}:")
+    for property in player.property:
+        print(f"- {property}")
+
+def buy_property(player, square):
+    if square['price'] <= player.money:
+        player.money -= square['price']
+        player.property.append(square['name'])
+        print(f"{player.name} bought {square['name']} for ${square['price']}")
+    else:
+        print(f"{player.name} does not have enough money to buy {square['name']}")
 
 def play_game():
     players = [Player("Player 1"), Player("Player 2")]
@@ -70,12 +77,14 @@ def play_game():
     while True:
         player = players[current_player_index]
         print(f"\n{player.name}'s turn.")
-        input("Press Enter to roll the dice.")
+        input("Press Enter to roll the dice.\n")
         dice1, dice2 = roll_dice()
         print(f"You rolled a {dice1} and a {dice2}.")
         move_player(player, dice1 + dice2)
 
-        # Add game logic here (buying properties, collecting rent, etc.)
+        current_square = board[player.position]
+        if current_square['name'] not in player.property and current_square['price'] > 0:
+            buy_property(player, current_square)
 
         current_player_index = (current_player_index + 1) % len(players)
 
