@@ -54,6 +54,7 @@ class Player:
 def roll_dice():
     return random.randint(1, 6), random.randint(1, 6)
 
+
 def move_player(player, steps):
     player.position = (player.position + steps) % 40
     current_square = board[player.position]
@@ -72,7 +73,7 @@ def buy_property(player, square):
         print(f"{player.name} does not have enough money to buy {square['name']}")
 
 def play_game():
-    players = [Player("Player 1"), Player("Player 2")]
+    players = [Player("Player 1"), Player("The PC")]
     current_player_index = 0
 
     while True:
