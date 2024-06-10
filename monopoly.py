@@ -1,6 +1,8 @@
 import random
 from collections import defaultdict
 from prettytable import PrettyTable
+import json
+
 
 # Define the player class
 class Player:
@@ -11,6 +13,7 @@ class Player:
         self.properties = []
         self.houses = defaultdict(int)
         self.hotels = defaultdict(int)
+        self.is_bankrupt = False
 
 
 # Define the game board
@@ -109,11 +112,64 @@ def buy_hotel(player, property):
         print(f"{player.name} has cash at hand: ${player.money}")
     else:
         print(f"{player.name} cannot buy a hotel on {property}")
+def save_game(player1, player2):
+    game_state = {
+        "player1": {
+            "name": player1.name,
+            "position": player1.position,
+            "money": player1.money,
+            "properties": player1.properties,
+            "houses": dict(player1.houses),
+            "hotels": dict(player1.hotels),
+            "is_bankrupt": player1.is_bankrupt
+        },
+        "player2": {
+            "name": player2.name,
+            "position": player2.position,
+            "money": player2.money,
+            "properties": player2.properties,
+            "houses": dict(player2.houses),
+            "hotels": dict(player2.hotels),
+            "is_bankrupt": player2.is_bankrupt
+        }
+    }
+    with open("game_state.json", "w") as f:
+        json.dump(game_state, f)
+    print("Game state saved.")
+
+def load_game():
+    try:
+        with open("game_state.json", "r") as f:
+            game_state = json.load(f)
+        player1 = Player(game_state["player1"]["name"])
+        player1.position = game_state["player1"]["position"]
+        player1.money = game_state["player1"]["money"]
+        player1.properties = game_state["player1"]["properties"]
+        player1.houses = defaultdict(int, game_state["player1"]["houses"])
+        player1.hotels = defaultdict(int, game_state["player1"]["hotels"])
+        player1.is_bankrupt = game_state["player1"]["is_bankrupt"]
+
+        player2 = Player(game_state["player2"]["name"])
+        player2.position = game_state["player2"]["position"]
+        player2.money = game_state["player2"]["money"]
+        player2.properties = game_state["player2"]["properties"]
+        player2.houses = defaultdict(int, game_state["player2"]["houses"])
+        player2.hotels = defaultdict(int, game_state["player2"]["hotels"])
+        player2.is_bankrupt = game_state["player2"]["is_bankrupt"]
+
+        print("Game state loaded.")
+        return player1, player2
+    except FileNotFoundError:
+        print("No saved game found.")
+        return None, None
+
 
 def play_game():
     global player1, player2
-    player1 = Player("Player 1")
-    player2 = Player("Computer")
+    player1, player2 = load_game()
+    if player1 is None or player2 is None:
+        player1 = Player("Player 1")
+        player2 = Player("Computer")
 
     current_player = player1
 
@@ -132,8 +188,9 @@ def play_game():
             print("What would you like to do?")
             print("1. Buy a house")
             print("2. Buy a hotel")
-            print("3. End turn")
-            choice = input("Enter your choice (1-3): ")
+            print("3. Save and exit")
+            print("4. End turn")
+            choice = input("Enter your choice (1-4): ")
             if choice == "1":
                 for property in current_player.properties:
                     print(f"{property} ({current_player.houses[property]} houses)")
@@ -145,6 +202,9 @@ def play_game():
                         print(f"{property} (4 houses)")
                 prop = input("Enter the property to buy a hotel: ")
                 buy_hotel(current_player, prop)
+            elif choice == "3":
+                save_game(player1, player2)
+                return
             else:
                 current_player = player2
         else:
