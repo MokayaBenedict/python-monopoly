@@ -67,6 +67,7 @@ def buy_property(player, square):
         player.money -= square['price']
         player.property.append(square['name'])
         print(f"{player.name} bought {square['name']} for ${square['price']}")
+        print(f"{player.name}  has cash at hand:({player.money}")
     else:
         print(f"{player.name} does not have enough money to buy {square['name']}")
 
