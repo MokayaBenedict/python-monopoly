@@ -1,10 +1,10 @@
+
 import random
 from collections import defaultdict
 from prettytable import PrettyTable
 import json
 
 
-# Define the player class
 class Player:
     def __init__(self, name):
         self.name = name
@@ -13,10 +13,35 @@ class Player:
         self.properties = []
         self.houses = defaultdict(int)
         self.hotels = defaultdict(int)
+        self.mortgaged_properties = []
         self.is_bankrupt = False
 
+    def mortgage(self, property_name):
+        for property in self.properties:
+            if property['name'] == property_name:
+                mortgage_value = property['price'] // 2
+                self.money += mortgage_value
+                self.mortgaged_properties.append(property)
+                self.properties.remove(property)
+                property['mortgaged'] = True
+                print(f"{self.name} mortgaged {property_name} for ${mortgage_value}")
+                return 
+        print(f"{self.name} does not own {property_name}")
 
-# Define the game board
+    def unmortgage(self, property_name):
+        for property in self.mortgaged_properties:
+            if property['name'] == property_name:
+                unmortgage_value = property['price'] // 2
+                if self.money >= unmortgage_value:
+                    self.money -= unmortgage_value
+                    self.mortgaged_properties.remove(property)
+                    self.properties.append(property)
+                    property['mortgaged'] = False
+                    print(f"{self.name} unmortgaged {property_name} for ${unmortgage_value}")
+                    return
+        print(f"{self.name} does not have {property_name} mortgaged")
+
+
 board = [
     {"square": 0, "name": "GO", "price": 0},
     {"square": 1, "name": "Mediterranean Avenue", "price": 60, "rent": [2, 10, 30, 90, 160, 250]},
@@ -59,18 +84,16 @@ board = [
     {"square": 38, "name": "Boardwalk", "price": 400, "rent": [50, 200, 600, 1400, 1700, 2000]}
 ]
 
-# Define the game functions
+
 def roll_dice():
     return random.randint(1, 6), random.randint(1, 6)
 
+
 def move_player(player, steps):
-    player.position = (player.position + steps) % 40
-    if player.position >= len(board):
-        player.position -= len(board)
+    player.position = (player.position + steps) % len(board)
     current_square = board[player.position]
     print(f"{player.name} moved to square {current_square['square']}: {current_square['name']} (${current_square['price']})")
 
-    # Check if the current square is owned, and collect rent if it is
     if current_square['name'] in player.properties:
         print(f"{player.name} owns this property and doesn't need to pay rent.")
     else:
@@ -80,10 +103,10 @@ def move_player(player, steps):
             player.money -= rent
             owner.money += rent
 
-    # Print the player's properties
     print(f"Properties owned by {player.name}:")
     for property in player.properties:
         print(f"- {property}")
+
 
 def buy_property(player, square):
     if square['price'] <= player.money:
@@ -94,24 +117,32 @@ def buy_property(player, square):
     else:
         print(f"{player.name} does not have enough money to buy {square['name']}")
 
-def buy_house(player, property):
-    if property in player.properties and player.money >= board[property]['rent'][player.houses[property] + 1]:
-        player.money -= board[property]['rent'][player.houses[property] + 1]
-        player.houses[property] += 1
-        print(f"{player.name} bought a house on {property} for ${board[property]['rent'][player.houses[property]]}")
-        print(f"{player.name} has cash at hand: ${player.money}")
-    else:
-        print(f"{player.name} cannot buy a house on {property}")
 
-def buy_hotel(player, property):
-    if property in player.properties and player.money >= board[property]['rent'][5] and player.houses[property] == 4:
-        player.money -= board[property]['rent'][5]
-        player.houses[property] = 5
-        player.hotels[property] = 1
-        print(f"{player.name} bought a hotel on {property} for ${board[property]['rent'][5]}")
-        print(f"{player.name} has cash at hand: ${player.money}")
-    else:
-        print(f"{player.name} cannot buy a hotel on {property}")
+def buy_house(player, property_name):
+    for square in board:
+        if square['name'] == property_name:
+            if property_name in player.properties and player.money >= square['rent'][player.houses[property_name] + 1]:
+                player.money -= square['rent'][player.houses[property_name] + 1]
+                player.houses[property_name] += 1
+                print(f"{player.name} bought a house on {property_name} for ${square['rent'][player.houses[property_name]]}")
+                print(f"{player.name} has cash at hand: ${player.money}")
+                return
+    print(f"{player.name} cannot buy a house on {property_name}")
+
+
+def buy_hotel(player, property_name):
+    for square in board:
+        if square['name'] == property_name:
+            if property_name in player.properties and player.money >= square['rent'][5] and player.houses[property_name] == 4:
+                player.money -= square['rent'][5]
+                player.houses[property_name] = 5
+                player.hotels[property_name] = 1
+                print(f"{player.name} bought a hotel on {property_name} for ${square['rent'][5]}")
+                print(f"{player.name} has cash at hand: ${player.money}")
+                return
+    print(f"{player.name} cannot buy a hotel on {property_name}")
+
+
 def save_game(player1, player2):
     game_state = {
         "player1": {
@@ -136,6 +167,7 @@ def save_game(player1, player2):
     with open("game_state.json", "w") as f:
         json.dump(game_state, f)
     print("Game state saved.")
+
 
 def load_game():
     try:
@@ -208,16 +240,15 @@ def play_game():
             else:
                 current_player = player2
         else:
-            # Computer player's turn
             current_player = player1
 
-        # Display the player information table
         player_table = PrettyTable()
         player_table.field_names = ["Player", "Position", "Money", "Properties"]
         player_table.add_row(["\033[94mPlayer 1\033[0m", player1.position, f"\033[94m${player1.money}\033[0m", ", \n".join(player1.properties)])
         player_table.add_row(["\033[91mComputer\033[0m", player2.position, f"\033[91m${player2.money}\033[0m", ",\n ".join(player2.properties)])
         print("\nPlayer Information:")
         print(player_table)
+
 
 if __name__ == "__main__":
     play_game()
