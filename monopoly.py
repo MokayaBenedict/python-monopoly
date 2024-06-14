@@ -1,4 +1,3 @@
-
 import random
 from collections import defaultdict
 from prettytable import PrettyTable
@@ -15,6 +14,10 @@ class Player:
         self.hotels = defaultdict(int)
         self.mortgaged_properties = []
         self.is_bankrupt = False
+        self.in_jail = False
+        self.jail_turns = 0
+        self.consecutive_doubles = 0
+        self.get_out_of_jail_free = False
 
     def mortgage(self, property_name):
         for property in self.properties:
@@ -25,7 +28,7 @@ class Player:
                 self.properties.remove(property)
                 property['mortgaged'] = True
                 print(f"{self.name} mortgaged {property_name} for ${mortgage_value}")
-                return 
+                return
         print(f"{self.name} does not own {property_name}")
 
     def unmortgage(self, property_name):
@@ -47,10 +50,10 @@ board = [
     {"square": 1, "name": "Mediterranean Avenue", "price": 60, "rent": [2, 10, 30, 90, 160, 250]},
     {"square": 2, "name": "Community Chest", "price": 0},
     {"square": 3, "name": "Baltic Avenue", "price": 60, "rent": [4, 20, 60, 180, 320, 450]},
-    {"square": 4, "name": "Income Tax", "price": 20},
+    {"square": 4, "name": "Income Tax", "price": 0},
     {"square": 5, "name": "Reading Railroad", "price": 200, "rent": [25, 50, 100, 200]},
     {"square": 6, "name": "Oriental Avenue", "price": 100, "rent": [6, 30, 90, 270, 400, 550]},
-    {"square": 7, "name": "Chance", "price": 10},
+    {"square": 7, "name": "Chance", "price": 0},
     {"square": 8, "name": "Vermont Avenue", "price": 100, "rent": [6, 30, 90, 270, 400, 550]},
     {"square": 9, "name": "Connecticut Avenue", "price": 120, "rent": [8, 40, 100, 300, 450, 600]},
     {"square": 10, "name": "Jail", "price": 0},
@@ -84,6 +87,134 @@ board = [
     {"square": 38, "name": "Boardwalk", "price": 400, "rent": [50, 200, 600, 1400, 1700, 2000]}
 ]
 
+chance_cards = [
+    "Advance to GO",
+    "Go to Jail",
+    "Pay Poor Tax of $15",
+    "Your building and loan matures. Collect $150",
+    "You have won a crossword competition. Collect $100",
+    "Bank pays you dividend of $50",
+    "Get out of Jail Free",
+    "Advance to Illinois Ave",
+    "Advance to St. Charles Place",
+    "Take a ride on the Reading Railroad",
+    "Advance to Boardwalk",
+    "Advance to the nearest Utility",
+    "Advance to the nearest Railroad",
+    "You are assessed for street repairs: $40 per house, $115 per hotel",
+    "Pay each player $50",
+    "Collect $150"
+]
+
+community_chest_cards = [
+    "Advance to GO",
+    "Bank error in your favor. Collect $200",
+    "Doctor's fees. Pay $50",
+    "From sale of stock you get $50",
+    "Get out of Jail Free",
+    "Go to Jail",
+    "Grand Opera Night. Collect $50 from every player",
+    "Holiday Fund matures. Receive $100",
+    "Income tax refund. Collect $20",
+    "It is your birthday. Collect $10 from each player",
+    "Life insurance matures. Collect $100",
+    "Pay hospital fees of $100",
+    "Pay school fees of $150",
+    "Receive $25 consultancy fee",
+    "You have won second prize in a beauty contest. Collect $10",
+    "You inherit $100"
+]
+
+
+def draw_card(cards):
+    return random.choice(cards)
+
+
+def display_board(players, board):
+    table = PrettyTable()
+    table.field_names = ["Square", "Property", "Price", "Rent", "Owner", "Houses", "Hotels"]
+    for property in board:
+        owner = ""
+        houses = ""
+        hotels = ""
+        for player in players:
+            for p in player.properties:
+                if p['name'] == property['name']:
+                    owner = player.name
+                    houses = player.houses[property['name']]
+                    hotels = player.hotels[property['name']]
+                    break
+        table.add_row([property['square'], property['name'], property.get('price', ''), property.get('rent', ''), owner, houses, hotels])
+    print(table)
+
+
+def handle_card(player, card, players):
+    if card == "Advance to GO":
+        player.position = 0
+        player.money += 200
+        print(f"{player.name} advanced to GO and collected $200.")
+    elif card == "Go to Jail":
+        player.position = 10
+        player.in_jail = True
+        player.jail_turns = 0
+        print(f"{player.name} is sent to jail.")
+    elif card == "Pay Poor Tax of $15":
+        player.money -= 15
+        print(f"{player.name} paid $15 Poor Tax.")
+    elif card == "Your building and loan matures. Collect $150":
+        player.money += 150
+        print(f"{player.name} collected $150 from building and loan maturing.")
+    elif card == "You have won a crossword competition. Collect $100":
+        player.money += 100
+        print(f"{player.name} collected $100 for winning a crossword competition.")
+    elif card == "Bank pays you dividend of $50":
+        player.money += 50
+        print(f"{player.name} collected $50 bank dividend.")
+    elif card == "Get out of Jail Free":
+        player.get_out_of_jail_free = True
+        print(f"{player.name} received a 'Get out of Jail Free' card.")
+    elif card == "Advance to Illinois Ave":
+        player.position = 24
+        print(f"{player.name} advanced to Illinois Ave.")
+    elif card == "Advance to St. Charles Place":
+        player.position = 11
+        print(f"{player.name} advanced to St. Charles Place.")
+    elif card == "Take a ride on the Reading Railroad":
+        player.position = 5
+        print(f"{player.name} advanced to Reading Railroad.")
+    elif card == "Advance to Boardwalk":
+        player.position = 38
+        print(f"{player.name} advanced to Boardwalk.")
+    elif card == "Advance to the nearest Utility":
+        if player.position < 12 or player.position > 28:
+            player.position = 12
+        else:
+            player.position = 28
+        print(f"{player.name} advanced to the nearest Utility.")
+    elif card == "Advance to the nearest Railroad":
+        if player.position < 5 or player.position > 35:
+            player.position = 5
+        elif player.position < 15:
+            player.position = 15
+        elif player.position < 25:
+            player.position = 25
+        else:
+            player.position = 35
+        print(f"{player.name} advanced to the nearest Railroad.")
+    elif card == "You are assessed for street repairs: $40 per house, $115 per hotel":
+        total_cost = sum(player.houses.values()) * 40 + sum(player.hotels.values()) * 115
+        player.money -= total_cost
+        print(f"{player.name} paid ${total_cost} for street repairs.")
+    elif card == "Pay each player $50":
+        for p in players:
+            if p != player:
+                player.money -= 50
+                p.money += 50
+        print(f"{player.name} paid each player $50.")
+    elif card == "Collect $150":
+        player.money += 150
+        print(f"{player.name} collected $150.")
+
 
 def roll_dice():
     return random.randint(1, 6), random.randint(1, 6)
@@ -94,10 +225,10 @@ def move_player(player, steps):
     current_square = board[player.position]
     print(f"{player.name} moved to square {current_square['square']}: {current_square['name']} (${current_square['price']})")
 
-    if current_square['name'] in player.properties:
+    if current_square['name'] in [prop['name'] for prop in player.properties]:
         print(f"{player.name} owns this property and doesn't need to pay rent.")
     else:
-        for owner in [p for p in [player1, player2] if current_square['name'] in p.properties]:
+        for owner in [p for p in [player1, player2] if current_square['name'] in [prop['name'] for prop in p.properties]]:
             rent = current_square['rent'][owner.houses[current_square['name']]]
             print(f"{player.name} pays ${rent} in rent to {owner.name}")
             player.money -= rent
@@ -105,13 +236,13 @@ def move_player(player, steps):
 
     print(f"Properties owned by {player.name}:")
     for property in player.properties:
-        print(f"- {property}")
+        print(f"- {property['name']}")
 
 
 def buy_property(player, square):
     if square['price'] <= player.money:
         player.money -= square['price']
-        player.properties.append(square['name'])
+        player.properties.append(square)
         print(f"{player.name} bought {square['name']} for ${square['price']}")
         print(f"{player.name} has cash at hand: ${player.money}")
     else:
@@ -121,7 +252,7 @@ def buy_property(player, square):
 def buy_house(player, property_name):
     for square in board:
         if square['name'] == property_name:
-            if property_name in player.properties and player.money >= square['rent'][player.houses[property_name] + 1]:
+            if property_name in [prop['name'] for prop in player.properties] and player.money >= square['rent'][player.houses[property_name] + 1]:
                 player.money -= square['rent'][player.houses[property_name] + 1]
                 player.houses[property_name] += 1
                 print(f"{player.name} bought a house on {property_name} for ${square['rent'][player.houses[property_name]]}")
@@ -133,7 +264,7 @@ def buy_house(player, property_name):
 def buy_hotel(player, property_name):
     for square in board:
         if square['name'] == property_name:
-            if property_name in player.properties and player.money >= square['rent'][5] and player.houses[property_name] == 4:
+            if property_name in [prop['name'] for prop in player.properties] and player.money >= square['rent'][5] and player.houses[property_name] == 4:
                 player.money -= square['rent'][5]
                 player.houses[property_name] = 5
                 player.hotels[property_name] = 1
@@ -149,7 +280,7 @@ def save_game(player1, player2):
             "name": player1.name,
             "position": player1.position,
             "money": player1.money,
-            "properties": player1.properties,
+            "properties": [prop['name'] for prop in player1.properties],
             "houses": dict(player1.houses),
             "hotels": dict(player1.hotels),
             "is_bankrupt": player1.is_bankrupt
@@ -158,7 +289,7 @@ def save_game(player1, player2):
             "name": player2.name,
             "position": player2.position,
             "money": player2.money,
-            "properties": player2.properties,
+            "properties": [prop['name'] for prop in player2.properties],
             "houses": dict(player2.houses),
             "hotels": dict(player2.hotels),
             "is_bankrupt": player2.is_bankrupt
@@ -176,7 +307,7 @@ def load_game():
         player1 = Player(game_state["player1"]["name"])
         player1.position = game_state["player1"]["position"]
         player1.money = game_state["player1"]["money"]
-        player1.properties = game_state["player1"]["properties"]
+        player1.properties = [prop for prop in board if prop['name'] in game_state["player1"]["properties"]]
         player1.houses = defaultdict(int, game_state["player1"]["houses"])
         player1.hotels = defaultdict(int, game_state["player1"]["hotels"])
         player1.is_bankrupt = game_state["player1"]["is_bankrupt"]
@@ -184,7 +315,7 @@ def load_game():
         player2 = Player(game_state["player2"]["name"])
         player2.position = game_state["player2"]["position"]
         player2.money = game_state["player2"]["money"]
-        player2.properties = game_state["player2"]["properties"]
+        player2.properties = [prop for prop in board if prop['name'] in game_state["player2"]["properties"]]
         player2.houses = defaultdict(int, game_state["player2"]["houses"])
         player2.hotels = defaultdict(int, game_state["player2"]["hotels"])
         player2.is_bankrupt = game_state["player2"]["is_bankrupt"]
@@ -213,37 +344,41 @@ def play_game():
         move_player(current_player, dice1 + dice2)
 
         current_square = board[current_player.position]
-        if current_square['name'] not in current_player.properties and current_square['price'] > 0:
+        if current_square['name'] not in [prop['name'] for prop in current_player.properties] and current_square['price'] > 0:
             buy_property(current_player, current_square)
 
         if current_player.name == "Player 1":
             print("What would you like to do?")
             print("1. Buy a house")
             print("2. Buy a hotel")
-            print("3.mortgage property")
-            print("4.unmortgage property")
+            print("3. Mortgage property")
+            print("4. Unmortgage property")
             print("5. Save and exit")
             print("6. End turn")
-            
-            choice = input("Enter your choice (1-4): ")
+
+            choice = input("Enter your choice (1-6): ")
             if choice == "1":
                 for property in current_player.properties:
-                    print(f"{property} ({current_player.houses[property]} houses)")
+                    print(f"{property['name']} ({current_player.houses[property['name']]} houses)")
                 prop = input("Enter the property to buy a house: ")
                 buy_house(current_player, prop)
             elif choice == "2":
                 for property in current_player.properties:
-                    if current_player.houses[property] == 4:
-                        print(f"{property} (4 houses)")
+                    if current_player.houses[property['name']] == 4:
+                        print(f"{property['name']} (4 houses)")
                 prop = input("Enter the property to buy a hotel: ")
                 buy_hotel(current_player, prop)
             elif choice == "3":
                 for property in current_player.properties:
-                    if property not in current_player.mortgaged_properties:
-                        print(f"{property} ({current_player.houses[property]} houses)")
-                property = input("Enter the property to mortgage: ")
-                current_player.mortgage_property(property)
-
+                    if property['name'] not in [prop['name'] for prop in current_player.mortgaged_properties]:
+                        print(f"{property['name']} ({current_player.houses[property['name']]} houses)")
+                property_name = input("Enter the property to mortgage: ")
+                current_player.mortgage(property_name)
+            elif choice == "4":
+                for property in current_player.mortgaged_properties:
+                    print(f"{property['name']} (mortgaged)")
+                property_name = input("Enter the property to unmortgage: ")
+                current_player.unmortgage(property_name)
             elif choice == "5":
                 save_game(player1, player2)
                 return
@@ -254,8 +389,8 @@ def play_game():
 
         player_table = PrettyTable()
         player_table.field_names = ["Player", "Position", "Money", "Properties", "Mortgaged Properties"]
-        player_table.add_row(["\033[94mPlayer 1\033[0m", player1.position, f"\033[94m${player1.money}\033[0m", ", \n".join(player1.properties), ", \n".join(player1.mortgaged_properties)])
-        player_table.add_row(["\033[91mComputer\033[0m", player2.position, f"\033[91m${player2.money}\033[0m", ", \n".join(player2.properties), ", \n".join(player2.mortgaged_properties)])
+        player_table.add_row(["\033[94mPlayer 1\033[0m", player1.position, f"\033[94m${player1.money}\033[0m", ", \n".join([prop['name'] for prop in player1.properties]), ", \n".join([prop['name'] for prop in player1.mortgaged_properties])])
+        player_table.add_row(["\033[91mComputer\033[0m", player2.position, f"\033[91m${player2.money}\033[0m", ", \n".join([prop['name'] for prop in player2.properties]), ", \n".join([prop['name'] for prop in player2.mortgaged_properties])])
 
         print("\nPlayer Information:")
         print(player_table)
