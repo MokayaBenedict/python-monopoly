@@ -3,7 +3,6 @@ from collections import defaultdict
 from prettytable import PrettyTable
 import json
 
-
 # Define the player class
 class Player:
     def __init__(self, name):
@@ -14,7 +13,6 @@ class Player:
         self.houses = defaultdict(int)
         self.hotels = defaultdict(int)
         self.is_bankrupt = False
-
 
 # Define the game board
 board = [
@@ -79,6 +77,13 @@ def move_player(player, steps):
             print(f"{player.name} pays ${rent} in rent to {owner.name}")
             player.money -= rent
             owner.money += rent
+            if player.money <= 0:
+                handle_bankruptcy(player, owner)
+                return  # End the turn if player is bankrupt
+
+    if player.money <= 0:
+        handle_bankruptcy(player, None)
+        return  # End the turn if player is bankrupt
 
     # Print the player's properties
     print(f"Properties owned by {player.name}:")
@@ -93,25 +98,53 @@ def buy_property(player, square):
         print(f"{player.name} has cash at hand: ${player.money}")
     else:
         print(f"{player.name} does not have enough money to buy {square['name']}")
+    if player.money <= 0:
+        handle_bankruptcy(player, None)
 
 def buy_house(player, property):
-    if property in player.properties and player.money >= board[property]['rent'][player.houses[property] + 1]:
-        player.money -= board[property]['rent'][player.houses[property] + 1]
+    property_index = next((i for i, square in enumerate(board) if square['name'] == property), None)
+    if property_index is not None and property in player.properties and player.money >= board[property_index]['rent'][player.houses[property] + 1]:
+        player.money -= board[property_index]['rent'][player.houses[property] + 1]
         player.houses[property] += 1
-        print(f"{player.name} bought a house on {property} for ${board[property]['rent'][player.houses[property]]}")
+        print(f"{player.name} bought a house on {property} for ${board[property_index]['rent'][player.houses[property]]}")
         print(f"{player.name} has cash at hand: ${player.money}")
     else:
         print(f"{player.name} cannot buy a house on {property}")
+    if player.money <= 0:
+        handle_bankruptcy(player, None)
 
 def buy_hotel(player, property):
-    if property in player.properties and player.money >= board[property]['rent'][5] and player.houses[property] == 4:
-        player.money -= board[property]['rent'][5]
+    property_index = next((i for i, square in enumerate(board) if square['name'] == property), None)
+    if property_index is not None and property in player.properties and player.money >= board[property_index]['rent'][5] and player.houses[property] == 4:
+        player.money -= board[property_index]['rent'][5]
         player.houses[property] = 5
         player.hotels[property] = 1
-        print(f"{player.name} bought a hotel on {property} for ${board[property]['rent'][5]}")
+        print(f"{player.name} bought a hotel on {property} for ${board[property_index]['rent'][5]}")
         print(f"{player.name} has cash at hand: ${player.money}")
     else:
         print(f"{player.name} cannot buy a hotel on {property}")
+    if player.money <= 0:
+        handle_bankruptcy(player, None)
+
+def handle_bankruptcy(player, creditor):
+    player.is_bankrupt = True
+    print(f"{player.name} has run out of money and is bankrupt!")
+
+    # Transfer all properties, houses, and hotels to the creditor
+    if creditor:
+        creditor.properties.extend(player.properties)
+        for prop in player.properties:
+            creditor.houses[prop] += player.houses[prop]
+            creditor.hotels[prop] += player.hotels[prop]
+
+    player.properties = []
+    player.houses = defaultdict(int)
+    player.hotels = defaultdict(int)
+    player.money = 0
+
+    if creditor:
+        print(f"{creditor.name} inherits all properties from {player.name}")
+
 def save_game(player1, player2):
     game_state = {
         "player1": {
@@ -163,7 +196,6 @@ def load_game():
         print("No saved game found.")
         return None, None
 
-
 def play_game():
     global player1, player2
     player1, player2 = load_game()
@@ -174,11 +206,18 @@ def play_game():
     current_player = player1
 
     while True:
+        if current_player.is_bankrupt:
+            print(f"{current_player.name} is bankrupt and cannot continue.")
+            break
+
         print(f"\n{current_player.name}'s turn.")
         input("Press Enter to roll the dice.\n")
         dice1, dice2 = roll_dice()
         print(f"You rolled a {dice1} and a {dice2}.")
         move_player(current_player, dice1 + dice2)
+
+        if current_player.is_bankrupt:
+            break
 
         current_square = board[current_player.position]
         if current_square['name'] not in current_player.properties and current_square['price'] > 0:
