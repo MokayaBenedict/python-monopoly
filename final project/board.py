@@ -1,5 +1,4 @@
-
-# board.py
+#monopoly board
 
 board = [
     {"square": 0, "name": "GO", "price": 0},
