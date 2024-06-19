@@ -1,0 +1,80 @@
+from player import*
+import random
+import json
+from collections import defaultdict
+from prettytable import PrettyTable
+
+
+def roll_dice():
+    return random.randint(1, 6), random.randint(1, 6)
+
+
+def display_board(players, board):
+    table = PrettyTable()
+    table.field_names = ["Square", "Property", "Price", "Rent", "Owner", "Houses", "Hotels"]
+    for property in board:
+        owner = ""
+        houses = ""
+        hotels = ""
+        for player in players:
+            for p in player.properties:
+                if p['name'] == property['name']:
+                    owner = player.name
+                    houses = player.houses[property['name']]
+                    hotels = player.hotels[property['name']]
+                    break
+        table.add_row([property['square'], property['name'], property.get('price', ''), property.get('rent', ''), owner, houses, hotels])
+    print(table)
+
+
+def save_game(player1, player2):
+    game_state = {
+        "player1": {
+            "name": player1.name,
+            "position": player1.position,
+            "money": player1.money,
+            "properties": [prop['name'] for prop in player1.properties],
+            "houses": dict(player1.houses),
+            "hotels": dict(player1.hotels),
+            "is_bankrupt": player1.is_bankrupt
+        },
+        "player2": {
+            "name": player2.name,
+            "position": player2.position,
+            "money": player2.money,
+            "properties": [prop['name'] for prop in player2.properties],
+            "houses": dict(player2.houses),
+            "hotels": dict(player2.hotels),
+            "is_bankrupt": player2.is_bankrupt
+        }
+    }
+    with open("game_state.json", "w") as f:
+        json.dump(game_state, f)
+    print("Game state saved.")
+
+
+def load_game(board):
+    try:
+        with open("game_state.json", "r") as f:
+            game_state = json.load(f)
+        player1 = Player(game_state["player1"]["name"])
+        player1.position = game_state["player1"]["position"]
+        player1.money = game_state["player1"]["money"]
+        player1.properties = [prop for prop in board if prop['name'] in game_state["player1"]["properties"]]
+        player1.houses = defaultdict(int, game_state["player1"]["houses"])
+        player1.hotels = defaultdict(int, game_state["player1"]["hotels"])
+        player1.is_bankrupt = game_state["player1"]["is_bankrupt"]
+
+        player2 = Player(game_state["player2"]["name"])
+        player2.position = game_state["player2"]["position"]
+        player2.money = game_state["player2"]["money"]
+        player2.properties = [prop for prop in board if prop['name'] in game_state["player2"]["properties"]]
+        player2.houses = defaultdict(int, game_state["player2"]["houses"])
+        player2.hotels = defaultdict(int, game_state["player2"]["hotels"])
+        player2.is_bankrupt = game_state["player2"]["is_bankrupt"]
+
+        print("Game state loaded.")
+        return player1, player2
+    except FileNotFoundError:
+        print("No saved game found.")
+        return None, None

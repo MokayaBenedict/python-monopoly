@@ -148,7 +148,17 @@ def display_board(players, board):
     print(table)
 
 
-def handle_card(player, card, players):
+def handle_card(player, card_type, players):
+    if card_type == "Chance":
+        card = random.choice(chance_cards)
+        print(f"{player.name} drew a Chance card: {card}")
+        handle_chance_card(player, card, players)
+    elif card_type == "Community Chest":
+        card = random.choice(community_chest_cards)
+        print(f"{player.name} drew a Community Chest card: {card}")
+        handle_community_chest_card(player, card, players)
+
+def handle_chance_card(player, card, players):
     if card == "Advance to GO":
         player.position = 0
         player.money += 200
@@ -201,19 +211,54 @@ def handle_card(player, card, players):
         else:
             player.position = 35
         print(f"{player.name} advanced to the nearest Railroad.")
+
+def handle_community_chest_card(player, card, players):
+    if card == "Advance to GO":
+        player.position = 0
+        player.money += 200
+        print(f"{player.name} advanced to GO and collected $200.")
+    elif card == "Go to Jail":
+        player.position = 10
+        player.in_jail = True
+        player.jail_turns = 0
+        print(f"{player.name} is sent to jail.")
     elif card == "You are assessed for street repairs: $40 per house, $115 per hotel":
         total_cost = sum(player.houses.values()) * 40 + sum(player.hotels.values()) * 115
-        player.money -= total_cost
-        print(f"{player.name} paid ${total_cost} for street repairs.")
+        if player.money >= total_cost:
+            player.money -= total_cost
+            print(f"{player.name} paid ${total_cost} for street repairs.")
+        else:
+            player.is_bankrupt = True
+            print(f"{player.name} went bankrupt while paying for street repairs.")
     elif card == "Pay each player $50":
         for p in players:
             if p != player:
-                player.money -= 50
                 p.money += 50
-        print(f"{player.name} paid each player $50.")
-    elif card == "Collect $150":
-        player.money += 150
-        print(f"{player.name} collected $150.")
+                player.money -= 50
+                print(f"{player.name} paid $50 to {p.name}.")
+    elif card == "Grand Opera Night. Collect $50 from every player":
+        for p in players:
+            if p != player:
+                if p.money >= 50:
+                    p.money -= 50
+                    player.money += 50
+                    print(f"{player.name} collected $50 from {p.name}.")
+                else:
+                    p.is_bankrupt = True
+                    player.money += p.money
+                    print(f"{p.name} went bankrupt and {player.name} collected ${p.money}.")
+    elif card == "It is your birthday. Collect $10 from each player":
+        for p in players:
+            if p != player:
+                if p.money >= 10:
+                    p.money -= 10
+                    player.money += 10
+                    print(f"{player.name} collected $10 from {p.name}.")
+                else:
+                    p.is_bankrupt = True
+                    player.money += p.money
+                    print(f"{p.name} went bankrupt and {player.name} collected ${p.money}.")
+
 
 
 def roll_dice():
