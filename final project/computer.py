@@ -1,8 +1,10 @@
 
 # computer.py
+from game_logic import*
 
-from game_utils import buy_property, buy_house, buy_hotel
 
+if __name__ == "__main__":
+    play_game()
 def computer_decision(player, board):
     """Make decisions for the computer player."""
     if player.money > 500:

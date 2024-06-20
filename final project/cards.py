@@ -38,3 +38,5 @@ community_chest_cards = [
     "You have won second prize in a beauty contest. Collect $10",
     "You inherit $100"
 ]
+def draw_card(cards):
+    return random.choice(cards)
