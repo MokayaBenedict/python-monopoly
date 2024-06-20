@@ -1,31 +1,12 @@
-from player import*
+
 import random
 import json
 from collections import defaultdict
-from prettytable import PrettyTable
-
+from player import Player
+from board import board
 
 def roll_dice():
     return random.randint(1, 6), random.randint(1, 6)
-
-
-def display_board(players, board):
-    table = PrettyTable()
-    table.field_names = ["Square", "Property", "Price", "Rent", "Owner", "Houses", "Hotels"]
-    for property in board:
-        owner = ""
-        houses = ""
-        hotels = ""
-        for player in players:
-            for p in player.properties:
-                if p['name'] == property['name']:
-                    owner = player.name
-                    houses = player.houses[property['name']]
-                    hotels = player.hotels[property['name']]
-                    break
-        table.add_row([property['square'], property['name'], property.get('price', ''), property.get('rent', ''), owner, houses, hotels])
-    print(table)
-
 
 def save_game(player1, player2):
     game_state = {
@@ -52,8 +33,7 @@ def save_game(player1, player2):
         json.dump(game_state, f)
     print("Game state saved.")
 
-
-def load_game(board):
+def load_game():
     try:
         with open("game_state.json", "r") as f:
             game_state = json.load(f)

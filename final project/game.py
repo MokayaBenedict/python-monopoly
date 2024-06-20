@@ -4,6 +4,7 @@ from prettytable import PrettyTable
 from board import create_board
 from cards import*
 from utils import *
+from game_logic import*
 
 
 def move_player(player, steps, board):

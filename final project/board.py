@@ -1,6 +1,4 @@
 
-# board.py
-
 board = [
     {"square": 0, "name": "GO", "price": 0},
     {"square": 1, "name": "Mediterranean Avenue", "price": 60, "rent": [2, 10, 30, 90, 160, 250]},
